@@ -2,6 +2,7 @@ import redis, { createClient } from 'redis';
 import rejson from 'redis-rejson';
 import redisearch from 'redis-redisearch';
 import { promisify } from 'util';
+import {getVideosKey, videosSuffix} from './models/youtube.js'
 import 'dotenv/config.js';
 
 rejson(redis);
@@ -19,11 +20,62 @@ const ftcreateAsync = promisify(redisClient.ft_create).bind(redisClient);
 const ftInfoAsync = promisify(redisClient.ft_info).bind(redisClient);
 const keysAsync = promisify(redisClient.keys).bind(redisClient);
 const delAsync = promisify(redisClient.del).bind(redisClient);
+const existsAsync = promisify(redisClient.exists).bind(redisClient);
+const jsonSetAsync = promisify(redisClient.json_set).bind(redisClient);
 
 export const roomsIndex = 'roomsIndex';
 
 redisClient.on('ready', async () => {
   console.log(`Connected to Redis on ${process.env.REDIS_HOST}.`);
+
+  const videosArrayExists = await existsAsync(getVideosKey(videosSuffix));
+  if (!videosArrayExists) {
+    console.log("Videos array doesn't exist. Creating...")
+    await jsonSetAsync(getVideosKey(videosSuffix), '.', '[]');
+    console.log("Done.")
+  }
+  // Delete stale data
+//   const roomKeys = await keysAsync('room:*');
+//   const queueKeys = await keysAsync('queue:*');
+//   const socketKeys = await keysAsync('socket:*');
+
+//   if (roomKeys?.length) {
+//     await delAsync(roomKeys);
+//   }
+
+//   if (queueKeys?.length) {
+//     await delAsync(queueKeys);
+//   }
+
+//   if (socketKeys?.length) {
+//     await delAsync(socketKeys);
+//   }
+
+//   let indexExists = false;
+
+//   try {
+//     await ftInfoAsync(roomsIndex);
+//     indexExists = true;
+//   } catch (err) {
+//     console.log('Rooms index does not exist. Creating index...');
+//   }
+
+//   try {
+//     if (!indexExists) {
+//       // Create secondary index on fields for efficient searching
+//       await ftcreateAsync(roomsIndex,
+//         'PREFIX', '1', 'room:',
+//         'SCHEMA',
+//         'name', 'TEXT', 'SORTABLE',
+//         'description', 'TEXT', 'SORTABLE',
+//         'genres', 'TAG', 'SORTABLE',
+//         'numMembers', 'NUMERIC', 'SORTABLE',
+//         'private', 'TAG', 'SORTABLE'
+//       )
+//     }
+//   } catch (err) {
+//     console.log(err);
+//   }
 });
 
 redisClient.on('error', err => {
