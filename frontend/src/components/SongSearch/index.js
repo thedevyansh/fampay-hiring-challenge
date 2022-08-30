@@ -10,14 +10,16 @@ import {
 import { FaSearch } from 'react-icons/fa';
 import * as songApi from '../../services/song';
 
-function SongSearch({ setSongsList }) {
+function SongSearch({ setLoading, setSongsList }) {
   const [localQuery, setLocalQuery] = useState('');
 
   const searchSongs = async query => {
+    setLoading(true);
     const response = await songApi.search(query);
     // const finalResponse = { query, videos: response?.data?.videos ?? [] };
     const songs = response?.data?.videos ?? [];
 
+    setLoading(false);
     setSongsList(songs);
   };
 
@@ -32,7 +34,7 @@ function SongSearch({ setSongsList }) {
   };
 
   return (
-    <InputGroup mt='50px' mb='50px'>
+    <InputGroup mt='50px' mb='20px'>
       <InputLeftElement
         pointerEvents='none'
         children={<Icon as={FaSearch} color='#8F8F8F' />}

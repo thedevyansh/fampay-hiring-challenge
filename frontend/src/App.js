@@ -11,6 +11,7 @@ import SongSearch from './components/SongSearch';
 import Song from './components/SongCard';
 
 function App() {
+  const [loading, setLoading] = useState(false);
   const [songsList, setSongsList] = useState([]);
 
   return (
@@ -18,9 +19,14 @@ function App() {
       <Center>
         <Box w='70%' m={4}>
           <Center>
-            <Text fontSize='4xl'>FamPay Backend Challenge.</Text>
+            <Text fontSize='4xl'>FamPay Backend Challenge</Text>
           </Center>
-          <SongSearch setSongsList={setSongsList} />
+          <SongSearch setLoading={setLoading} setSongsList={setSongsList} />
+          {loading && (
+            <Text fontSize='xl' fontWeight='bold' mb='20px'>
+              Loading...
+            </Text>
+          )}
           <SimpleGrid id='scrollable' minChildWidth='364px' spacing={5}>
             {songsList.map((song, index) => (
               <Song key={index} data={song} />
