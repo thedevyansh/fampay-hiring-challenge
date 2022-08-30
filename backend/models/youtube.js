@@ -5,6 +5,7 @@ import redisClient from '../redis_client.js';
 import 'dotenv/config.js';
 
 const THRESHOLD = 2000
+const MAX_RESULTS = 50
 
 const jsonGetAsync = promisify(redisClient.json_get).bind(redisClient);
 const jsonSetAsync = promisify(redisClient.json_set).bind(redisClient);
@@ -28,7 +29,7 @@ async function searchVideos(query) {
   let tenMinuteAgo = new Date(Date.now() - 1000 * 60 * 10);
   let isoString = tenMinuteAgo.toISOString().split('.')[0] + 'Z';
 
-  let response = await api.searchAll(query, 50, {
+  let response = await api.searchAll(query, MAX_RESULTS, {
     type: 'video',
     order: 'date',
     publishedAfter: isoString,
@@ -66,7 +67,7 @@ async function searchVideos(query) {
   let nextPageToken = response?.nextPageToken
 
   while (transient_videos_length < THRESHOLD && nextPageToken != undefined) {
-    response = await api.searchAll(query, 50, {
+    response = await api.searchAll(query, MAX_RESULTS, {
       type: 'video',
       order: 'date',
       publishedAfter: isoString,
@@ -146,14 +147,12 @@ async function searchVideos(query) {
 
   // delete the temp array at the end
   await jsonDelAsync(getVideosKey(transientSuffix), '.');
-
-  return [];
 }
 
-// cron.schedule('*/10 * * * *', function() {
-//   // await searchVideos('cricket')
-
-//   console.log("Runs every 10 mins");
+// cron.schedule('*/1 * * * *', async () => {
+//   console.log("Running cron job...")
+//   await searchVideos('cricket')
+//   console.log("Success.")
 // })
 
-export { searchVideos, getVideosKey, videosSuffix };
+export { searchVideos, getVideosKey, videosSuffix, THRESHOLD, MAX_RESULTS };

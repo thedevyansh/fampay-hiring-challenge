@@ -1,61 +1,22 @@
-import React, { useState } from 'react';
-import {
-  Icon,
-  InputGroup,
-  InputLeftElement,
-  Input,
-  InputRightElement,
-  Button,
-} from '@chakra-ui/react';
-import { FaSearch } from 'react-icons/fa';
-import * as songApi from '../../services/song';
+import React from 'react';
+import { Button, Flex, Text } from '@chakra-ui/react';
 
-function SongSearch({ setLoading, setSongsList }) {
-  const [localQuery, setLocalQuery] = useState('');
-
-  const searchSongs = async query => {
-    setLoading(true);
-    const response = await songApi.search(query);
-    // const finalResponse = { query, videos: response?.data?.videos ?? [] };
-    const songs = response?.data?.videos ?? [];
-
-    setLoading(false);
-    setSongsList(songs);
-  };
-
-  const handleEnter = e => {
-    if (e.key === 'Enter') {
-      searchSongs(e.target.value);
-    }
-  };
-
-  const handleClickSearch = () => {
-    searchSongs(localQuery);
+function SongSearch({ pageNumber, setPageNumber }) {
+  const handleClick = () => {
+    setPageNumber(1);
   };
 
   return (
-    <InputGroup mt='50px' mb='20px'>
-      <InputLeftElement
-        pointerEvents='none'
-        children={<Icon as={FaSearch} color='#8F8F8F' />}
-      />
-      <Input
-        value={localQuery}
-        onChange={e => setLocalQuery(e.target.value)}
-        onKeyDown={handleEnter}
-        placeholder='Search for songs on YouTube.'
-        _placeholder={{ color: 'white' }}
-      />
-      <InputRightElement width='5.5rem'>
-        <Button
-          colorScheme='blue'
-          h='2rem'
-          size='sm'
-          onClick={handleClickSearch}>
-          Search
-        </Button>
-      </InputRightElement>
-    </InputGroup>
+    <Flex mt='50px' mb='30px' alignItems='center'>
+      <Button colorScheme='blue' onClick={handleClick}>
+        GET /
+      </Button>
+      {pageNumber > 0 && (
+        <Text
+          ml={4}
+          fontSize='lg'>{`/api/song/paginatedSearch?page=${pageNumber}`}</Text>
+      )}
+    </Flex>
   );
 }
 

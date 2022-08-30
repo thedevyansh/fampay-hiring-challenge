@@ -11,3 +11,7 @@ const instance = axios.create({
 export const search = async search => {
   return await instance.get('/api/song/search', { params: { search } });
 };
+
+export const paginatedSearch = async page => {
+  return await instance.get('/api/song/paginatedSearch', { params: { page } });
+};
