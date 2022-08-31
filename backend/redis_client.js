@@ -1,19 +1,14 @@
 import redis, { createClient } from 'redis';
 import rejson from 'redis-rejson';
-import redisearch from 'redis-redisearch';
 import { promisify } from 'util';
 import { getVideosKey, videosSuffix } from './models/youtube.js';
-import 'dotenv/config.js';
 
 rejson(redis);
-redisearch(redis);
-
-redis.addCommand('ft.aggregate');
 
 const redisClient = createClient({
-  host: process.env.REDIS_HOST,
-  password: process.env.REDIS_PASSWORD,
-  port: parseInt(process.env.REDIS_PORT),
+  host: 'localhost',
+  password: 'your_password_for_redis',
+  port: 6379,
 });
 
 const existsAsync = promisify(redisClient.exists).bind(redisClient);
@@ -26,7 +21,7 @@ const jsonArrTrimAsync = promisify(redisClient.json_arrtrim).bind(redisClient);
 const jsonArrInsertAsync = promisify(redisClient.json_arrinsert).bind(redisClient);
 
 redisClient.on('ready', async () => {
-  console.log(`Connected to Redis on ${process.env.REDIS_HOST}.`);
+  console.log(`Connected to Redis.`);
 
   const videosArrayExists = await existsAsync(getVideosKey(videosSuffix));
   if (!videosArrayExists) {
@@ -39,8 +34,6 @@ redisClient.on('ready', async () => {
 redisClient.on('error', err => {
   console.error(err);
 });
-
-// export default redisClient;
 
 export {
   redisClient,

@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  Flex,
-  Text,
-  Image,
-  Icon,
-  HStack,
-} from '@chakra-ui/react';
+import { Flex, Text, Image, Icon, HStack } from '@chakra-ui/react';
 import { FaYoutube } from 'react-icons/fa';
 import he from 'he';
 
@@ -28,7 +22,9 @@ function Song({ data }) {
           alt='thumbnail'
         />
         <Flex ml='4' flexDir='column'>
-          <Text fontWeight='bold' fontSize='sm'>{he.decode(title)}</Text>
+          <Text fontWeight='bold' fontSize='sm'>
+            {he.decode(title)}
+          </Text>
           <HStack mt={4}>
             <Icon as={FaYoutube} />
             <Text fontSize='sm'>{he.decode(channelTitle)}</Text>

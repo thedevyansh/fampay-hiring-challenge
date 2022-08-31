@@ -10,7 +10,6 @@ import {
   jsonArrInsertAsync,
 } from '../redis_client.js';
 import { YOUTUBE_API_KEYS } from '../apikeys.js';
-import 'dotenv/config.js';
 
 const THRESHOLD = 2000;
 const MAX_RESULTS = 50;
@@ -21,7 +20,6 @@ const transientSuffix = 'transient_videos';
 const getVideosKey = name => videosPrefix + name;
 
 async function fetchLatestVideos(query) {
-  // create temporary array to store returned response
   await jsonSetAsync(getVideosKey(transientSuffix), '.', '[]');
 
   let tenMinuteAgo = new Date(Date.now() - 1000 * 60 * 10);
@@ -46,7 +44,6 @@ async function fetchLatestVideos(query) {
     }
 
     if (valid) {
-      console.log("Worked for API key: ", i)
       break;
     }
   }
@@ -67,8 +64,6 @@ async function fetchLatestVideos(query) {
       };
     });
 
-    console.log('Response length 0: ', videos.length);
-
     videos.forEach(async video => {
       try {
         await jsonArrAppendAsync(
@@ -88,7 +83,6 @@ async function fetchLatestVideos(query) {
   );
 
   let nextPageToken = response?.nextPageToken;
-  let count = 0;
 
   while (transient_videos_length < THRESHOLD && nextPageToken != undefined) {
     valid = false;
@@ -109,7 +103,6 @@ async function fetchLatestVideos(query) {
       }
 
       if (valid) {
-        console.log("Worked for API key: ", i)
         break;
       }
     }
@@ -129,8 +122,6 @@ async function fetchLatestVideos(query) {
         };
       });
 
-      console.log(`Response length ${++count}: ${videos.length}`);
-
       videos.forEach(async video => {
         try {
           await jsonArrAppendAsync(
@@ -149,10 +140,8 @@ async function fetchLatestVideos(query) {
   }
 
   if (transient_videos_length >= THRESHOLD) {
-    // remove all videos from the original array
     await jsonSetAsync(getVideosKey(videosSuffix), '.', '[]');
 
-    // copy temp array to original array
     for (let i = 0; i < transient_videos_length; i++) {
       try {
         let video = await jsonGetAsync(
@@ -190,7 +179,6 @@ async function fetchLatestVideos(query) {
     }
   }
 
-  // delete the temp array at the end
   await jsonDelAsync(getVideosKey(transientSuffix), '.');
 }
 

@@ -1,7 +1,5 @@
-import { promisify } from 'util';
-import { redisClient, jsonGetAsync } from '../redis_client.js';
+import { jsonGetAsync } from '../redis_client.js';
 import { getVideosKey, videosSuffix } from './youtube.js';
-import 'dotenv/config.js';
 
 async function searchSongs(title, description) {
   let original_array = JSON.parse(

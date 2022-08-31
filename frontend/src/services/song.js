@@ -1,10 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL:
-    !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-      ? 'http://localhost:5000'
-      : 'https://groowe.herokuapp.com',
+  baseURL: 'http://localhost:5000',
   withCredentials: true,
 });
 

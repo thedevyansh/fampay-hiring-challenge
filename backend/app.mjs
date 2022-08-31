@@ -4,12 +4,9 @@ import helmet from 'helmet';
 import path, { join } from 'path';
 import { fileURLToPath } from 'url';
 import logger from 'morgan';
-import session from 'express-session';
-import connectRedis from 'connect-redis';
-
-import songRouter from './routes/song.js';
 
 import { redisClient } from './redis_client.js';
+import songRouter from './routes/song.js';
 
 import 'dotenv/config.js';
 
@@ -30,13 +27,7 @@ app.use(
           'https://www.youtube.com',
         ],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: [
-          '*',
-          "'unsafe-inline'",
-          'http://tinygraphs.com',
-          'https://avatars.dicebear.com',
-          'https://www.youtube.com',
-        ],
+        imgSrc: ['*', "'unsafe-inline'", 'https://www.youtube.com'],
         frameSrc: ["'self'", "'unsafe-inline'", 'https://www.youtube.com'],
       },
     },
@@ -49,10 +40,7 @@ app.use(
 app.use(logger('dev'));
 app.use(
   cors({
-    origin:
-      !process.env.NODE_ENV || process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3000'
-        : ['https://groowe.netlify.app'],
+    origin: 'http://localhost:3000',
     credentials: true,
   })
 );

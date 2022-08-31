@@ -1,7 +1,5 @@
-import { promisify } from 'util';
-import { redisClient, jsonGetAsync, jsonArrLenAsync } from '../redis_client.js';
+import { jsonGetAsync, jsonArrLenAsync } from '../redis_client.js';
 import { MAX_RESULTS, getVideosKey, videosSuffix } from './youtube.js';
-import 'dotenv/config.js';
 
 async function getPaginatedVideos(page) {
   if (page <= 0) {
