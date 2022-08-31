@@ -9,12 +9,11 @@ import {
   jsonArrTrimAsync,
   jsonArrInsertAsync,
 } from '../redis_client.js';
+import { YOUTUBE_API_KEYS } from '../apikeys.js';
 import 'dotenv/config.js';
 
 const THRESHOLD = 2000;
 const MAX_RESULTS = 50;
-
-const api = new YoutubeDataAPI(process.env.YOUTUBE_KEY);
 
 const videosPrefix = 'videos:';
 const videosSuffix = 'latest_videos';
@@ -28,54 +27,34 @@ async function fetchLatestVideos(query) {
   let tenMinuteAgo = new Date(Date.now() - 1000 * 60 * 10);
   let isoString = tenMinuteAgo.toISOString().split('.')[0] + 'Z';
 
-  let response = await api.searchAll(query, MAX_RESULTS, {
-    type: 'video',
-    order: 'date',
-    publishedAfter: isoString,
-  });
+  let valid = false,
+    response = {},
+    videos = [];
 
-  let videos = Array.from(response.items).map(item => {
-    const snippet = item.snippet;
-    return {
-      videoId: item.id.videoId,
-      title: snippet.title,
-      description: snippet.description,
-      thumbnails: snippet.thumbnails,
-      channelTitle: snippet.channelTitle,
-      publishTime: snippet.publishTime,
-    };
-  });
+  for (let i = 0; i < YOUTUBE_API_KEYS.length; i++) {
+    let api = new YoutubeDataAPI(YOUTUBE_API_KEYS[i]);
 
-  console.log('Response length 0: ', videos.length);
-
-  videos.forEach(async video => {
     try {
-      await jsonArrAppendAsync(
-        getVideosKey(transientSuffix),
-        '.',
-        JSON.stringify(video)
-      );
-    } catch (error) {
-      console.log(error);
+      response = await api.searchAll(query, MAX_RESULTS, {
+        type: 'video',
+        order: 'date',
+        publishedAfter: isoString,
+      });
+      valid = true;
+    } catch (err) {
+      console.log('Invalid API key: ', err);
     }
-  });
 
-  let transient_videos_length = await jsonArrLenAsync(
-    getVideosKey(transientSuffix),
-    '.'
-  );
+    if (valid) {
+      console.log("Worked for API key: ", i)
+      break;
+    }
+  }
 
-  let nextPageToken = response?.nextPageToken;
-  let count = 0;
-
-  while (transient_videos_length < THRESHOLD && nextPageToken != undefined) {
-    response = await api.searchAll(query, MAX_RESULTS, {
-      type: 'video',
-      order: 'date',
-      publishedAfter: isoString,
-      pageToken: nextPageToken,
-    });
-
+  if (!valid) {
+    await jsonDelAsync(getVideosKey(transientSuffix), '.');
+    return;
+  } else {
     videos = Array.from(response.items).map(item => {
       const snippet = item.snippet;
       return {
@@ -88,7 +67,7 @@ async function fetchLatestVideos(query) {
       };
     });
 
-    console.log(`Response length ${++count}: ${videos.length}`);
+    console.log('Response length 0: ', videos.length);
 
     videos.forEach(async video => {
       try {
@@ -101,9 +80,72 @@ async function fetchLatestVideos(query) {
         console.log(error);
       }
     });
+  }
 
-    transient_videos_length += videos.length;
-    nextPageToken = response?.nextPageToken;
+  let transient_videos_length = await jsonArrLenAsync(
+    getVideosKey(transientSuffix),
+    '.'
+  );
+
+  let nextPageToken = response?.nextPageToken;
+  let count = 0;
+
+  while (transient_videos_length < THRESHOLD && nextPageToken != undefined) {
+    valid = false;
+
+    for (let i = 0; i < YOUTUBE_API_KEYS.length; i++) {
+      let api = new YoutubeDataAPI(YOUTUBE_API_KEYS[i]);
+
+      try {
+        response = await api.searchAll(query, MAX_RESULTS, {
+          type: 'video',
+          order: 'date',
+          publishedAfter: isoString,
+          pageToken: nextPageToken,
+        });
+        valid = true;
+      } catch (err) {
+        console.log('Invalid API key: ', err);
+      }
+
+      if (valid) {
+        console.log("Worked for API key: ", i)
+        break;
+      }
+    }
+
+    if (!valid) {
+      break;
+    } else {
+      videos = Array.from(response.items).map(item => {
+        const snippet = item.snippet;
+        return {
+          videoId: item.id.videoId,
+          title: snippet.title,
+          description: snippet.description,
+          thumbnails: snippet.thumbnails,
+          channelTitle: snippet.channelTitle,
+          publishTime: snippet.publishTime,
+        };
+      });
+
+      console.log(`Response length ${++count}: ${videos.length}`);
+
+      videos.forEach(async video => {
+        try {
+          await jsonArrAppendAsync(
+            getVideosKey(transientSuffix),
+            '.',
+            JSON.stringify(video)
+          );
+        } catch (error) {
+          console.log(error);
+        }
+      });
+
+      transient_videos_length += videos.length;
+      nextPageToken = response?.nextPageToken;
+    }
   }
 
   if (transient_videos_length >= THRESHOLD) {
@@ -152,10 +194,10 @@ async function fetchLatestVideos(query) {
   await jsonDelAsync(getVideosKey(transientSuffix), '.');
 }
 
-// cron.schedule('*/1 * * * *', async () => {
-//   console.log('Running cron job...');
-//   await fetchLatestVideos('cricket');
-//   console.log('Success.');
-// });
+cron.schedule('*/10 * * * *', async () => {
+  console.log('Running cron job...');
+  await fetchLatestVideos('cricket');
+  console.log('Success.');
+});
 
 export { getVideosKey, videosSuffix, THRESHOLD, MAX_RESULTS };
