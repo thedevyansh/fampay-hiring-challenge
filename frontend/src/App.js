@@ -20,19 +20,22 @@ function App() {
 
   const toast = useToast();
 
-  const getPaginatedResponse = useCallback(async page => {
-    const response = await songApi.paginatedSearch(page);
-    const songs = response?.data?.videos ?? [];
+  const getPaginatedResponse = useCallback(
+    async page => {
+      const response = await songApi.paginatedSearch(page);
+      const songs = response?.data?.videos ?? [];
 
-    if (songs.length === 0) {
-      toast({
-        description: 'No more videos available.',
-        status: 'error',
-        duration: 10000,
-      });
-    }
-    setSongsList(songs);
-  }, [toast]);
+      if (songs.length === 0) {
+        toast({
+          description: 'No more videos available.',
+          status: 'error',
+          duration: 10000,
+        });
+      }
+      setSongsList(songs);
+    },
+    [toast]
+  );
 
   useEffect(() => {
     if (pageNumber > 0) {

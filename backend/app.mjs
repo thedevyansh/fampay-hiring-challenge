@@ -9,7 +9,7 @@ import connectRedis from 'connect-redis';
 
 import songRouter from './routes/song.js';
 
-import redisClient from './redis_client.js';
+import { redisClient } from './redis_client.js';
 
 import 'dotenv/config.js';
 
